@@ -17,8 +17,33 @@ Window (For lamp hint)
 Lighting (Reveals lamp hint)
 """
 
+"""
+Whenver we want to "compile" then the following terminal command should be used:
+
+Windows: pyinstaller --onefile --add-data "images;images" Room1.py
+Linux:
+Mac:
+
+"""
+
 import tkinter as tk
 from tkinter import PhotoImage
+import os
+import sys
+
+# Function to get the path to the images folder
+def resource_path(image_name):
+    if getattr(sys, 'frozen', False):
+        # If we're running as a bundled executable
+        bundled_directory = sys._MEIPASS
+    else:
+        # If we're running in a normal Python script
+        bundled_directory = os.path.dirname(os.path.abspath(__file__))
+    
+    images_folder_dir = os.path.join(bundled_directory, 'images')
+    full_image_path = os.path.join(images_folder_dir, image_name)
+
+    return full_image_path
 
 # Create the main window
 root = tk.Tk()
@@ -30,7 +55,8 @@ root.geometry(f"{window_width}x{window_height}")
 root.resizable(False, False)
 
 # Load the PNG image
-image = PhotoImage(file="Room1/Room1.png")
+image_path = resource_path("Room1.png")
+image = PhotoImage(file=image_path)
 
 # Create a Canvas widget
 canvas = tk.Canvas(root)
@@ -76,11 +102,10 @@ def on_click(event):
     else:
         print("What are you looking for?")
 
-
 # Bind the resize event to the function
 canvas.bind("<Configure>", resize_image)
 
-# Bind the mouse click event to the function
+# Bind the mouse click event to the function - will call the function "on_click" when the user left clicks
 canvas.bind("<Button-1>", on_click)
 
 # Run the Tkinter event loop
