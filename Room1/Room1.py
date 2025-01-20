@@ -21,7 +21,7 @@ Lighting (Reveals lamp hint)
 Whenver we want to "compile" then the following terminal command should be used:
 
 Windows: pyinstaller --onefile --add-data "images;images" Room1.py
-Linux:
+Linux (tested with ZorinOS (ubuntu based)): pyinstaller -D -F --windowed --add-data "images:images" --hidden-import=tkinter "Room1.py" 
 Mac:
 
 """
