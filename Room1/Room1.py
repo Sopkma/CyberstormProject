@@ -71,7 +71,7 @@ def resize_canvas(event):
     canvasSize_to_imageSize = image_read.resize((new_width, new_height))
     final_image = ImageTk.PhotoImage(canvasSize_to_imageSize)
 
-    canvas.delete("all)")
+    canvas.delete("all")
     canvas.create_image(0, 0, anchor=tk.NW, image=final_image)
 
     canvas.image = final_image
