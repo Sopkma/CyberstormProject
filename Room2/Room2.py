@@ -31,6 +31,7 @@ from PIL import Image, ImageTk
 import os
 import sys
 
+
 # Function to get the path to the images folder
 def resource_path(image_name):
     if getattr(sys, "frozen", False):
