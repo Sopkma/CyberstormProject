@@ -22,7 +22,6 @@ from PIL import Image, ImageTk
 import os
 import sys
 
-
 # Function to get the path to the images folder
 def resource_path(image_name):
     if getattr(sys, "frozen", False):
@@ -39,16 +38,16 @@ def resource_path(image_name):
 
 
 class Draggable:
-    def __init__(self, canvas, image_path, x, y, size):
+    def __init__(self, canvas, image_path, cord_x, cord_y, size_x, size_y):
         self.canvas = canvas
         self.image = Image.open(image_path)
-        self.image = self.image.resize((size, size))
+        self.x_size = size_x
+        self.y_size = size_y
+        self.image = self.image.resize((self.x_size, self.y_size))
         self.tk_image = ImageTk.PhotoImage(self.image)
-        self.x = x
-        self.y = y
-        self.id = self.canvas.create_image(x, y, image=self.tk_image)
-        self.canvas.tag_bind(self.id, "<ButtonPress-1>", self.on_press)
-        self.canvas.tag_bind(self.id, "<B1-Motion>", self.on_drag)
+        self.x_cord = cord_x
+        self.y_cord = cord_y
+        self.id = self.canvas.create_image(self.x_cord, self.y_cord, image=self.tk_image)
 
     def on_press(self, event):
         self.start_x = event.x
@@ -61,6 +60,7 @@ class Draggable:
         self.start_x = event.x
         self.start_y = event.y
 
+        self.x_cord, self.y_cord = self.canvas.coords(self.id)
 
 class Room:
 
@@ -77,15 +77,15 @@ class Room:
 
 class ThievesJourney(tk.Frame):
 
-    INITIAL_WIDTH = 700
-    INITIAL_HEIGHT = 700
-
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         self.canvas = tk.Canvas(root)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.rooms = []
         self.current_room = None
+
+        self.windowWidthTracker = 700
+        self.windowHeightTracker = 700
 
     def setup(self):
         Room1 = Room(
@@ -105,11 +105,12 @@ class ThievesJourney(tk.Frame):
                 ((115, 373, 480, 595), self.on_desk_click),
                 ((598, 680, 140, 400), self.on_right_window_click),
             ],
+
             [
-                (resource_path("trashcan.png"), 145, 575, 75),
-                (resource_path("key.png"), 465, 170, 10),
-                (resource_path("clock.png"), 465, 170, 75),
-            ],
+                Draggable(self.canvas, resource_path("trashcan.png"), 145, 575, 75, 75),
+                Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10),
+                Draggable(self.canvas, resource_path("clock.png"), 465, 170, 75, 75)
+            ]
         )
 
         Room2 = Room("Room 2", resource_path("Room2.png"), [], [])
@@ -137,14 +138,34 @@ class ThievesJourney(tk.Frame):
 
         self.canvas.image = final_image
 
+
+        width_ratio = (new_width / self.windowWidthTracker)
+        height_ratio = (new_height / self.windowHeightTracker)
+
         for item in self.current_room.drag_items:
-            Draggable(self.canvas, *item)
+        #For x size (both moving and resizing) 
+            item.x_size, item.x_cord = item.x_size * width_ratio, item.x_cord * width_ratio
+        #For y size (both moving and resizing)
+            item.y_size, item.y_cord = item.y_size * height_ratio, item.y_cord * height_ratio
+
+            # Resize the draggable item image
+            item.image = item.image.resize((int(item.x_size), int(item.y_size)))
+            item.tk_image = ImageTk.PhotoImage(item.image)
+
+            # Re-create draggable item with the updated position and size
+            item.id = self.canvas.create_image(item.x_cord, item.y_cord, image=item.tk_image)
+            self.canvas.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
+            self.canvas.tag_bind(item.id, "<B1-Motion>", item.on_drag)
+
+        self.windowWidthTracker = new_width
+        self.windowHeightTracker = new_height
+
 
     # Function to handle mouse click events
     def on_click(self, event):
-        x, y = (event.x * 700) // root.winfo_width(), (
-            event.y * 700
-        ) // root.winfo_height()
+        x = (event.x * 700) // root.winfo_width()
+        y = (event.y * 700) // root.winfo_height()
+        
         for (x1, x2, y1, y2), action in self.current_room.click_actions:
             if x1 <= x <= x2 and y1 <= y <= y2:
                 action()
