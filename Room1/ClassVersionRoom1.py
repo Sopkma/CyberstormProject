@@ -105,7 +105,7 @@ class ThievesJourney(tk.Frame):
                 ((115, 373, 480, 595), self.on_desk_click),
                 ((598, 680, 140, 400), self.on_right_window_click),
             ],
-
+            #Create instances of a draggable that are tied only to room 1 (trashcan, key, and the clock) 
             [
                 Draggable(self.canvas, resource_path("trashcan.png"), 145, 575, 75, 75),
                 Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10),
@@ -113,10 +113,12 @@ class ThievesJourney(tk.Frame):
             ]
         )
 
+        #For future use
         Room2 = Room("Room 2", resource_path("Room2.png"), [], [])
         Room3 = Room("Room 3", resource_path("Room3.png"), [], [])
         Room4 = Room("Room 4", resource_path("Room4.png"), [], [])
 
+        #
         Room1.next_room = Room2
         Room2.next_room = Room3
         Room3.next_room = Room4
@@ -125,43 +127,51 @@ class ThievesJourney(tk.Frame):
         self.current_room = Room1
 
     def resize_canvas(self, event):
+        #Reads the room's image path
         image_read = Image.open(f"{self.current_room.image_path}")
 
+        #New dimensions of the canvas
         new_width = event.width
         new_height = event.height
 
+        #Changes the size of the image for the room to that of the window
         canvasSize_to_imageSize = image_read.resize((new_width, new_height))
         final_image = ImageTk.PhotoImage(canvasSize_to_imageSize)
 
+        #Removes everything from the canvas
         self.canvas.delete("all")
+        #Adds the room image to the canvas
         self.canvas.create_image(0, 0, anchor=tk.NW, image=final_image)
 
-        self.canvas.image = final_image
+        self.canvas.image = final_image #Keeps track of the image so that is it not garbage collected
 
-
+        #Ratios for increasing or decreasing the size and location of the draggables
         width_ratio = (new_width / self.windowWidthTracker)
         height_ratio = (new_height / self.windowHeightTracker)
 
+        #Iterate through all of the draggables within the current room - when the window is resized, the draggables will stay in their position and not move. They will also be resized accordingly.
         for item in self.current_room.drag_items:
         #For x size (both moving and resizing) 
             item.x_size, item.x_cord = item.x_size * width_ratio, item.x_cord * width_ratio
         #For y size (both moving and resizing)
             item.y_size, item.y_cord = item.y_size * height_ratio, item.y_cord * height_ratio
 
-            # Resize the draggable item image
+            # Resize the draggable item image and update the draggable's internal variables
             item.image = item.image.resize((int(item.x_size), int(item.y_size)))
             item.tk_image = ImageTk.PhotoImage(item.image)
 
             # Re-create draggable item with the updated position and size
             item.id = self.canvas.create_image(item.x_cord, item.y_cord, image=item.tk_image)
+            #Allows for dragging to take place
             self.canvas.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
             self.canvas.tag_bind(item.id, "<B1-Motion>", item.on_drag)
 
+        #Update the trackers for the next time that things are moved
         self.windowWidthTracker = new_width
         self.windowHeightTracker = new_height
 
 
-    # Function to handle mouse click events
+    # Function to handle mouse click events. This essentially keeps everything within the 700x700 plane (the original window size that pops up). If the window is resized then the x and y are correctly sized to the 700x700 plane.
     def on_click(self, event):
         x = (event.x * 700) // root.winfo_width()
         y = (event.y * 700) // root.winfo_height()
@@ -180,6 +190,7 @@ class ThievesJourney(tk.Frame):
             self.current_room = self.current_room.next_room
             self.resize_canvas(tk.Event)
 
+    #General functions for printing what is pressed on
     def on_left_window_click(self):
         print("Left Window clicked!")
 
@@ -213,6 +224,7 @@ class ThievesJourney(tk.Frame):
     def on_right_window_click(self):
         print("Right Window Clicked!")
 
+    #Sets up the game to be played
     def play(self):
         self.setup()
         self.canvas.bind("<Configure>", self.resize_canvas)
@@ -220,10 +232,10 @@ class ThievesJourney(tk.Frame):
 
 
 root = tk.Tk()
-root.title("A Thief's Journey")  # Top left title of the
-root.geometry("700x700")  # Initial size of the window
-root.minsize(700, 700)  # Window must be this size or larger
-root.resizable(True, True)
+root.title("A Thief's Journey")  #Top left title of the
+root.geometry("700x700")  #Initial size of the window
+root.minsize(700, 700)  #Window must be this size or larger
+root.resizable(True, True) #Allows for the window to be resizable in both x and y direction
 game = ThievesJourney(root)
 game.play()
 root.mainloop()
