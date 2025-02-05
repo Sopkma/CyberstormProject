@@ -99,9 +99,10 @@ class ThievesJourney(tk.Frame):
             "Room 1",
             resource_path("iRoom1.png"),
             [
+                # ((x1, x2, y1, y2), action)
                 ((24, 102, 140, 400), self.on_left_window_click),
                 ((0, 0, 0, 0), self.change_room),
-                # ((56, 122, 560, 640), self.on_trashcan_click),
+                ((105, 170, 525, 605), self.on_trashcan_click),
                 ((155, 190, 470, 495), self.on_treasure_chest_click),
                 ((388, 460, 405, 430), self.on_lock_click),
                 ((375, 550, 220, 585), self.on_door_click),
@@ -113,7 +114,6 @@ class ThievesJourney(tk.Frame):
                 ((598, 680, 140, 400), self.on_right_window_click),
             ],
             [
-                (resource_path("trashcan.png"), 145, 575, 75),
                 (resource_path("key.png"), 465, 170, 10),
                 (resource_path("clock.png"), 465, 170, 75),
             ],
@@ -161,7 +161,7 @@ class ThievesJourney(tk.Frame):
         else:
             print("What are you looking for?")
 
-        #print(f"Clicked at ({x}, {y})")
+        print(f"Clicked at ({x}, {y})")
 
     def change_room(self):
         if self.current_room.next_room:
@@ -172,7 +172,46 @@ class ThievesJourney(tk.Frame):
         print("Left Window clicked!")
 
     def on_trashcan_click(self):
-        print("Trashcan clicked!")
+        """Opens a new window displaying the trashcan image with draggable objects."""
+        if hasattr(self, "trashcan_window") and self.trashcan_window.winfo_exists():
+            print("Trashcan is already open!")
+            return  # Prevent opening multiple windows
+
+        print("Opening Trashcan!")
+
+        self.trashcan_window = tk.Toplevel(root)  # Create a new popup window
+        self.trashcan_window.title("Trashcan")
+        self.trashcan_window.geometry("400x400")  # Adjust as needed
+
+        trashcan_canvas = tk.Canvas(self.trashcan_window, width=400, height=400, bg="gray")
+        trashcan_canvas.pack(fill=tk.BOTH, expand=True)
+
+        # Load and display static trashcan image (background)
+        img_path = resource_path("TrashcanTV.png")
+        img = Image.open(img_path).resize((400, 400))
+        self.tk_trashcan_img = ImageTk.PhotoImage(img)
+
+        trashcan_canvas.create_image(0, 0, anchor=tk.NW, image=self.tk_trashcan_img)
+        # Add sticky note in trashcan
+        note_img_path = resource_path("Stickynote.png")
+        note_img = Image.open(note_img_path).resize((100, 100))  # Adjust size
+        self.tk_note_img = ImageTk.PhotoImage(note_img)
+        self.note_id = trashcan_canvas.create_image(150, 150, anchor=tk.NW, image=self.tk_note_img) # Adjust position
+        trashcan_canvas.tag_bind(self.note_id, "<Button-1>", self.on_note_click)
+        # Draggable objects inside the trashcan
+        self.trashcan_draggables = [
+                                                                # X,Y,Size
+            Draggable(trashcan_canvas, resource_path("Paper.png"), 150, 150, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 2.png"), 150, 250, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 3.png"), 225, 140, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 4.png"), 225, 180, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 5.png"), 275, 225, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 6.png"), 225, 275, 100),
+        ]
+
+    def on_trashcan_close(self):
+        self.trashcan_window.destroy()
+        self.trashcan_window = None
 
     def on_treasure_chest_click(self):
         print("Treasure Chest clicked!")
@@ -200,6 +239,9 @@ class ThievesJourney(tk.Frame):
 
     def on_right_window_click(self):
         print("Right Window Clicked!")
+
+    def on_note_click(self, event):
+        print("Note clicked!")
 
     def play(self):
         self.setup()
