@@ -97,7 +97,7 @@ class ThievesJourney(tk.Frame):
     def setup(self):
         Room1 = Room(
             "Room 1",
-            resource_path("iRoom1.png"),
+            resource_path("Room1.png"),
             [
                 # ((x1, x2, y1, y2), action)
                 ((24, 102, 140, 400), self.on_left_window_click),
@@ -200,7 +200,7 @@ class ThievesJourney(tk.Frame):
         trashcan_canvas.tag_bind(self.note_id, "<Button-1>", self.on_note_click)
         # Draggable objects inside the trashcan
         self.trashcan_draggables = [
-                                                                # X,Y,Size
+            # X,Y,Size
             Draggable(trashcan_canvas, resource_path("Paper.png"), 150, 150, 100),
             Draggable(trashcan_canvas, resource_path("Paper 2.png"), 150, 250, 100),
             Draggable(trashcan_canvas, resource_path("Paper 3.png"), 225, 140, 100),

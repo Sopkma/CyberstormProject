@@ -19,68 +19,17 @@ Mac:
 
 import tkinter as tk
 from PIL import Image, ImageTk
-import os
-import sys
-
-# Function to get the path to the images folder
-def resource_path(image_name):
-    if getattr(sys, "frozen", False):
-        # If we're running as a bundled executable
-        bundled_directory = sys._MEIPASS
-    else:
-        # If we're running in a normal Python script
-        bundled_directory = os.path.dirname(os.path.abspath(__file__))
-
-    images_folder_dir = os.path.join(bundled_directory, "images")
-    full_image_path = os.path.join(images_folder_dir, image_name)
-
-    return full_image_path
-
-
-class Draggable:
-    def __init__(self, canvas, image_path, cord_x, cord_y, size_x, size_y):
-        self.canvas = canvas
-        self.image = Image.open(image_path)
-        self.x_size = size_x
-        self.y_size = size_y
-        self.image = self.image.resize((self.x_size, self.y_size))
-        self.tk_image = ImageTk.PhotoImage(self.image)
-        self.x_cord = cord_x
-        self.y_cord = cord_y
-        self.id = self.canvas.create_image(self.x_cord, self.y_cord, image=self.tk_image)
-
-    def on_press(self, event):
-        self.start_x = event.x
-        self.start_y = event.y
-
-    def on_drag(self, event):
-        dx = event.x - self.start_x
-        dy = event.y - self.start_y
-        self.canvas.move(self.id, dx, dy)
-        self.start_x = event.x
-        self.start_y = event.y
-
-        self.x_cord, self.y_cord = self.canvas.coords(self.id)
-
-class Room:
-
-    def __init__(
-        self, name: str, image_path: str, click_actions: list, drag_items: list
-    ):
-
-        self.name = name
-        self.image_path = image_path
-        self.click_actions = click_actions
-        self.drag_items = drag_items
-        self.extra = None
-
+from Classes import Draggable, Room
+from GlobalFunctions import resource_path
 
 class ThievesJourney(tk.Frame):
 
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
+
         self.canvas = tk.Canvas(root)
         self.canvas.pack(fill=tk.BOTH, expand=True)
+        
         self.rooms = []
         self.current_room = None
 
@@ -90,30 +39,29 @@ class ThievesJourney(tk.Frame):
     def setup(self):
         Room1 = Room(
             "Room 1",
-            resource_path("iRoom1.png"),
+            resource_path("Room1.png"),
             [
                 ((24, 102, 140, 400), self.on_left_window_click),
                 ((0, 0, 0, 0), self.change_room),
-                # ((56, 122, 560, 640), self.on_trashcan_click),
+                ((105, 170, 525, 605), self.on_trashcan_click),
                 ((155, 190, 470, 495), self.on_treasure_chest_click),
                 ((388, 460, 405, 430), self.on_lock_click),
                 ((375, 550, 220, 585), self.on_door_click),
                 ((125, 374, 225, 295), self.on_caesar_cipher_click),
                 ((340, 370, 365, 385), self.on_light_switch_click),
                 ((305, 380, 95, 150), self.on_light_click),
-                # ((413, 502, 115, 185), self.on_clock_click),
                 ((115, 373, 480, 595), self.on_desk_click),
                 ((598, 680, 140, 400), self.on_right_window_click),
             ],
             #Create instances of a draggable that are tied only to room 1 (trashcan, key, and the clock) 
             [
-                Draggable(self.canvas, resource_path("trashcan.png"), 145, 575, 75, 75),
                 Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10),
                 Draggable(self.canvas, resource_path("clock.png"), 465, 170, 75, 75)
             ]
         )
 
         #For future use
+        Room0 = Room("Room 0", resource_path("Room0.png"), [], [])
         Room2 = Room("Room 2", resource_path("Room2.png"), [], [])
         Room3 = Room("Room 3", resource_path("Room3.png"), [], [])
         Room4 = Room("Room 4", resource_path("Room4.png"), [], [])
@@ -126,9 +74,16 @@ class ThievesJourney(tk.Frame):
         self.rooms = [Room1, Room2, Room3, Room4]
         self.current_room = Room1
 
-    def resize_canvas(self, event):
+    def resize_canvas(self, event, canvas_var: 'tk.Canvas', path_to_image=None, draggables=None):
         #Reads the room's image path
-        image_read = Image.open(f"{self.current_room.image_path}")
+
+        if path_to_image == None:
+            path_to_image = self.current_room.image_path
+
+        if draggables == None:
+            draggables = self.current_room.drag_items
+        
+        image_read = Image.open(path_to_image)
 
         #New dimensions of the canvas
         new_width = event.width
@@ -139,18 +94,18 @@ class ThievesJourney(tk.Frame):
         final_image = ImageTk.PhotoImage(canvasSize_to_imageSize)
 
         #Removes everything from the canvas
-        self.canvas.delete("all")
+        canvas_var.delete("all")
         #Adds the room image to the canvas
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=final_image)
+        canvas_var.create_image(0, 0, anchor=tk.NW, image=final_image)
 
-        self.canvas.image = final_image #Keeps track of the image so that is it not garbage collected
+        canvas_var.image = final_image #Keeps track of the image so that is it not garbage collected
 
         #Ratios for increasing or decreasing the size and location of the draggables
         width_ratio = (new_width / self.windowWidthTracker)
         height_ratio = (new_height / self.windowHeightTracker)
 
         #Iterate through all of the draggables within the current room - when the window is resized, the draggables will stay in their position and not move. They will also be resized accordingly.
-        for item in self.current_room.drag_items:
+        for item in draggables:
         #For x size (both moving and resizing) 
             item.x_size, item.x_cord = item.x_size * width_ratio, item.x_cord * width_ratio
         #For y size (both moving and resizing)
@@ -161,10 +116,10 @@ class ThievesJourney(tk.Frame):
             item.tk_image = ImageTk.PhotoImage(item.image)
 
             # Re-create draggable item with the updated position and size
-            item.id = self.canvas.create_image(item.x_cord, item.y_cord, image=item.tk_image)
+            item.id = canvas_var.create_image(item.x_cord, item.y_cord, image=item.tk_image)
             #Allows for dragging to take place
-            self.canvas.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
-            self.canvas.tag_bind(item.id, "<B1-Motion>", item.on_drag)
+            canvas_var.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
+            canvas_var.tag_bind(item.id, "<B1-Motion>", item.on_drag)
 
         #Update the trackers for the next time that things are moved
         self.windowWidthTracker = new_width
@@ -188,14 +143,55 @@ class ThievesJourney(tk.Frame):
     def change_room(self):
         if self.current_room.next_room:
             self.current_room = self.current_room.next_room
-            self.resize_canvas(tk.Event)
+            self.resize_canvas(self.canvas, tk.Event)
 
     #General functions for printing what is pressed on
     def on_left_window_click(self):
         print("Left Window clicked!")
 
     def on_trashcan_click(self):
-        print("Trashcan clicked!")
+        """Opens a new window displaying the trashcan image with draggable objects."""
+        if hasattr(self, "trashcan_window") and self.trashcan_window.winfo_exists():
+            print("Trashcan is already open!")
+            return  # Prevent opening multiple windows
+
+        print("Opening Trashcan!")
+
+        self.trashcan_window = tk.Toplevel(root)  # Create a new popup window
+        self.trashcan_window.title("Trashcan")
+        self.trashcan_window.geometry("400x400")  # Adjust as needed
+
+        trashcan_canvas = tk.Canvas(self.trashcan_window, width=400, height=400, bg="gray")
+        trashcan_canvas.pack(fill=tk.BOTH, expand=True)
+
+        # Load and display static trashcan image (background)
+        img_path = resource_path("TrashcanTV.png")
+        img = Image.open(img_path).resize((400, 400))
+        self.tk_trashcan_img = ImageTk.PhotoImage(img)
+
+        trashcan_canvas.create_image(0, 0, anchor=tk.NW, image=self.tk_trashcan_img)
+        # Add sticky note in trashcan
+        note_img_path = resource_path("Stickynote.png")
+        note_img = Image.open(note_img_path).resize((100, 100))  # Adjust size
+        self.tk_note_img = ImageTk.PhotoImage(note_img)
+        self.note_id = trashcan_canvas.create_image(150, 150, anchor=tk.NW, image=self.tk_note_img) # Adjust position
+        # Draggable objects inside the trashcan
+        self.trashcan_draggables = [
+            # X,Y,Size
+            Draggable(trashcan_canvas, resource_path("Paper.png"), 150, 150, 100, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 2.png"), 150, 250, 100, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 3.png"), 225, 140, 100, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 4.png"), 225, 180, 100, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 5.png"), 275, 225, 100, 100),
+            Draggable(trashcan_canvas, resource_path("Paper 6.png"), 225, 275, 100, 100),
+        ]
+
+        trashcan_canvas.bind("<Configure>",  lambda event: self.resize_canvas(event, trashcan_canvas, img_path, self.trashcan_draggables))
+        trashcan_canvas.tag_bind(self.note_id, "<Button-1>", self.on_note_click)
+
+    def on_trashcan_close(self):
+        self.trashcan_window.destroy()
+        self.trashcan_window = None
 
     def on_treasure_chest_click(self):
         print("Treasure Chest clicked!")
@@ -224,10 +220,13 @@ class ThievesJourney(tk.Frame):
     def on_right_window_click(self):
         print("Right Window Clicked!")
 
+    def on_note_click(self, event):
+        print("Note clicked!")
+
     #Sets up the game to be played
     def play(self):
         self.setup()
-        self.canvas.bind("<Configure>", self.resize_canvas)
+        self.canvas.bind("<Configure>", lambda event: self.resize_canvas(event, self.canvas))
         self.canvas.bind("<Button-1>", self.on_click)
 
 
