@@ -38,44 +38,6 @@ class ThievesJourney(tk.Frame):
 
     import Room1Functions
 
-    def setup(self):
-        Room1 = Room(
-            "Room 1",
-            resource_path("Room1.png"),
-            [
-                ((24, 102, 140, 400), self.Room1Functions.on_left_window_click),
-                ((0, 0, 0, 0), self.change_room),
-                ((105, 170, 525, 605), lambda: self.Room1Functions.on_trashcan_click(self, root)),
-                ((155, 190, 470, 495), self.Room1Functions.on_treasure_chest_click),
-                ((388, 460, 405, 430), self.Room1Functions.on_lock_click),
-                ((375, 550, 220, 585), self.Room1Functions.on_door_click),
-                ((125, 374, 225, 295), self.Room1Functions.on_caesar_cipher_click),
-                ((340, 370, 365, 385), self.Room1Functions.on_light_switch_click),
-                ((305, 380, 95, 150), self.Room1Functions.on_light_click),
-                ((115, 373, 480, 595), self.Room1Functions.on_desk_click),
-                ((598, 680, 140, 400), self.Room1Functions.on_right_window_click),
-            ],
-            #Create instances of a draggable that are tied only to room 1 (trashcan, key, and the clock) 
-            [
-                Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10),
-                Draggable(self.canvas, resource_path("clock.png"), 465, 170, 75, 75)
-            ]
-        )
-
-        #For future use
-        Room0 = Room("Room 0", resource_path("Room0.png"), [], [])
-        Room2 = Room("Room 2", resource_path("Room2.png"), [], [])
-        Room3 = Room("Room 3", resource_path("Room3.png"), [], [])
-        Room4 = Room("Room 4", resource_path("Room4.png"), [], [])
-
-        #
-        Room1.next_room = Room2
-        Room2.next_room = Room3
-        Room3.next_room = Room4
-
-        self.rooms = [Room1, Room2, Room3, Room4]
-        self.current_room = Room1
-
     def resize_canvas(self, event, canvas_var: 'tk.Canvas', path_to_image=None, draggables=None):
 
         isOtherWindow = True
@@ -106,7 +68,7 @@ class ThievesJourney(tk.Frame):
 
         #Iterate through all of the draggables within the current room - when the window is resized, the draggables will stay in their position and not move. They will also be resized accordingly.
         for item in draggables: 
-            #If it is the main window/canvas, then resize, otherwise, do not use the width ratio
+            #If it is the main window/canvas, then resize, otherwise, do not use the width ratio as other windows will be static in size
 
             if not(isOtherWindow):
                 #Ratios for increasing or decreasing the size and location of the draggables
@@ -131,6 +93,57 @@ class ThievesJourney(tk.Frame):
         self.windowWidthTracker = new_width
         self.windowHeightTracker = new_height
 
+    def setup(self):
+
+        Room0 = Room(
+            "Room 0",
+            resource_path("Room0.png"),
+            [
+                ((24, 102, 140, 400), self.Room1Functions.on_left_window_click),
+            ],
+            [
+
+            ]
+
+
+        )
+
+        Room1 = Room(
+            "Room 1",
+            resource_path("Room1.png"),
+            [
+                ((24, 102, 140, 400), self.Room1Functions.on_left_window_click),
+                ((105, 170, 525, 605), lambda: self.Room1Functions.on_trashcan_click(self, root)),
+                ((155, 190, 470, 495), self.Room1Functions.on_treasure_chest_click),
+                ((388, 460, 405, 430), self.Room1Functions.on_lock_click),
+                ((375, 550, 220, 585), self.Room1Functions.on_door_click),
+                ((125, 374, 225, 295), self.Room1Functions.on_caesar_cipher_click),
+                ((340, 370, 365, 385), self.Room1Functions.on_light_switch_click),
+                ((305, 380, 95, 150), self.Room1Functions.on_light_click),
+                ((115, 373, 480, 595), self.Room1Functions.on_desk_click),
+                ((598, 680, 140, 400), self.Room1Functions.on_right_window_click),
+            ],
+            #Create instances of a draggable that are tied only to room 1 (trashcan, key, and the clock) 
+            [
+                Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10),
+                Draggable(self.canvas, resource_path("clock.png"), 465, 170, 75, 75)
+            ]
+        )
+
+        #For future use
+        Room2 = Room("Room 2", resource_path("Room2.png"), [], [])
+        Room3 = Room("Room 3", resource_path("Room3.png"), [], [])
+        Room4 = Room("Room 4", resource_path("Room4.png"), [], [])
+        Room5 = Room("Room 4", resource_path("Room5.png"), [], [])
+
+        #
+        Room0.exits = [Room1]
+        Room1.exits = [Room0, Room2]
+        Room2.exits = [Room1, Room3]
+        Room3.exits = [Room2, Room4, Room5]
+
+        self.rooms = [Room1, Room2, Room3, Room4, Room5]
+        self.current_room = Room0
 
     # Function to handle mouse click events. This essentially keeps everything within the 700x700 plane (the original window size that pops up). If the window is resized then the x and y are correctly sized to the 700x700 plane.
     def on_click(self, event):

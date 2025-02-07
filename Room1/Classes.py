@@ -29,10 +29,10 @@ class Draggable:
 
 class Room:
 
-    def __init__(self, name: str, image_path: str, click_actions: list, drag_items: list):
+    def __init__(self, name: str, image_path: str, click_actions, drag_items: list):
 
         self.name = name
         self.image_path = image_path
         self.click_actions = click_actions
         self.drag_items = drag_items
-        self.extra = None
+        self.exits = []
