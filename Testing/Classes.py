@@ -1,7 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 
-
 class Draggable:
     def __init__(self, canvas, image_path, cord_x, cord_y, size_x, size_y, on_drag_end=None):
         self.canvas = canvas
@@ -20,7 +19,6 @@ class Draggable:
 
         # Bind mouse events for dragging.
         self.canvas.tag_bind(self.id, "<ButtonPress-1>", self.on_press)
-        self.canvas.tag_bind(self.id, "<B1-Motion>", self.on_drag)
         self.canvas.tag_bind(self.id, "<ButtonRelease-1>", self.on_release)
 
     def on_press(self, event):
@@ -28,7 +26,7 @@ class Draggable:
         self.start_x = self.canvas.canvasx(event.x)
         self.start_y = self.canvas.canvasy(event.y)
 
-    def on_drag(self, event):
+    def on_drag(self, event, root: 'tk.Frame'):
         # Convert event coordinates to canvas coordinates.
         new_x = self.canvas.canvasx(event.x)
         new_y = self.canvas.canvasy(event.y)
@@ -41,7 +39,8 @@ class Draggable:
         self.start_x, self.start_y = new_x, new_y
         # Update the stored coordinates.
         self.x_cord, self.y_cord = self.canvas.coords(self.id)
-        
+        self.x_cord = (self.x_cord * 700) // root.winfo_width()
+        self.y_cord = (self.y_cord * 700) // root.winfo_height()        
 
     def on_release(self, event):
         

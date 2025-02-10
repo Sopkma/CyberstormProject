@@ -155,7 +155,7 @@ class ThievesJourney(tk.Frame):
 
             item.id = canvas_var.create_image(item.x_cord, item.y_cord, image=item.tk_image)
             canvas_var.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
-            canvas_var.tag_bind(item.id, "<B1-Motion>", item.on_drag)
+            canvas_var.tag_bind(item.id, "<B1-Motion>", lambda event, item=item: item.on_drag(event, root))
             canvas_var.tag_bind(item.id, "<ButtonRelease-1>", item.on_release)
 
         self.windowWidthTracker = new_width
@@ -238,7 +238,8 @@ class ThievesJourney(tk.Frame):
 
         for item in self.trashcan_draggables:
             trashcan_canvas.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
-            trashcan_canvas.tag_bind(item.id, "<B1-Motion>", item.on_drag)
+            trashcan_canvas.tag_bind(item.id, "<B1-Motion>", lambda event, item=item: item.on_drag(event, root))
+
 
     def on_trashcan_close(self):
         self.trashcan_window.destroy()
