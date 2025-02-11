@@ -44,9 +44,7 @@ class Draggable:
         self.x_cord, self.y_cord = self.canvas.coords(self.id)
 
     def on_release(self, event):
-        # When the drag is finished, call the callback if provided.
-        if self.on_drag_end:
-            self.on_drag_end(self)
+        pass
 
 
 class Room:

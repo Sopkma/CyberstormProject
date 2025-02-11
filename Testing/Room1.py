@@ -250,13 +250,9 @@ class ThievesJourney(tk.Frame):
         if self.chest_locked:
             messagebox.showwarning("Locked", "You need a key to open the treasure chest!")
         else:
-            if not self.game_state["vigenere_message_obtained"]:
-                messagebox.showinfo("Message", "Vigenere Code: [something]!")
-                self.game_state["vigenere_message_obtained"] = True
-                self.tasks[1]["completed"] = True
-                self.task_window.update_tasks()
-            else:
+            if self.game_state["vigenere_message_obtained"]:
                 print("Treasure chest already opened.")
+                
 
     def on_lock_click(self):
         print("Lock Clicked!")
@@ -293,10 +289,12 @@ class ThievesJourney(tk.Frame):
         print("Key realeased at:", key_x, key_y)
         if chest_x1 <= key_x <= chest_x2 and chest_y1 <= key_y <= chest_y2:
             print("Chest unlocked!")
+            messagebox.showinfo("Message", "Vigenere Code: [something]!")
             self.chest_locked = False
+            self.canvas.delete(draggable.id)
+            self.game_state["vigenere_message_obtained"] = True
+            self.tasks[1]["completed"] = True
             self.task_window.update_tasks()
-        else:
-            print("Key not in the correct position.")
 
     def on_desk_click(self):
         print("Desk clicked!")
