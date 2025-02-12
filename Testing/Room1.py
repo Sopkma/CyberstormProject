@@ -50,9 +50,10 @@ class ThievesJourney(tk.Frame):
         }
 
         # Task list
-        self.tasks = [  {"desc": "Decode Caesar cipher","completed": False,},
+        self.tasks = [  
+                        {"desc": "Decode Caesar cipher","completed": False,},
                         {"desc": "Decode Vigenère cipher","completed": False,},
-                        {"desc": "Find sticky note","completed": False,},
+                        {"desc": "Find sticky note (60 seconds)","completed": False,},
                         {"desc": "Door unlocked","completed": False,}]
         self.task_window = TaskWindow(parent, self.tasks)
         self.draggable_objects = []
@@ -190,6 +191,7 @@ class ThievesJourney(tk.Frame):
             self.task_window.update_tasks()
         else:
             messagebox.showerror("Error", "Incorrect code. Try again.")
+            print(third)
     def on_click(self, event):
         x = (event.x * 700) // root.winfo_width()
         y = (event.y * 700) // root.winfo_height()
@@ -344,7 +346,6 @@ class ThievesJourney(tk.Frame):
         if chest_x1 <= key_x <= chest_x2 and chest_y1 <= key_y <= chest_y2:
             messagebox.showinfo("Chest unlocked!","Click chest again for flag")
             messagebox.showinfo("Message", "Vwim Mcdrfl Fayi Smdyp Wrhlcv Nblxi Imkym Gexjy Iincf Xfjku Ommynzvl Vlzzppd Gjiv Vsymi Fayi Smdyp Dfrupfn Smdyp Mjwbp Dclc Jcfpiu Uyeap Gexjy Tbbpccf Izfp Wrhlcv Hptvgcci Itarl Uyeap Ctbp Gexjy Jcfpiu Eccnb Mjwbp Fmdyi Lpkvi Mgdu Pqtus Ayusjzy Lgci Dfrlmgv Itarl Eccnb Ctbp")
-            #print("Vwim Mcdrfl Fayi Smdyp Wrhlcv Nblxi Imkym Gexjy Iincf Xfjku Ommynzvl Vlzzppd Gjiv Vsymi Fayi Smdyp Dfrupfn Smdyp Mjwbp Dclc Jcfpiu Uyeap Gexjy Tbbpccf Izfp Wrhlcv Hptvgcci Itarl Uyeap Ctbp Gexjy Jcfpiu Eccnb Mjwbp Fmdyi Lpkvi Mgdu Pqtus Ayusjzy Lgci Dfrlmgv Itarl Eccnb Ctbp")
             self.chest_locked = False
             self.canvas.delete(draggable.id)
             self.current_room.drag_items.remove(draggable)
@@ -359,16 +360,18 @@ class ThievesJourney(tk.Frame):
         pass
 
     def on_note_click(self, event):
+        remaining_time = int(self.update_code - (time.time() - self.last_update))
         if self.game_state["sticky_note_found"]:
             #print("Sticky note already found!")
             #print("Code:", self.generate_code())
-            messagebox.showinfo("Already found.", f"\nCode: {self.generate_code()}")
+            messagebox.showinfo("Already found.", f"\nCode: {self.generate_code()} \n Time left: {remaining_time} seconds")
         else:
             self.game_state["sticky_note_found"] = True
             self.tasks[2]["completed"] = True
             self.task_window.update_tasks()
             #print("Sticky note found!")
-            messagebox.showinfo("Found!", f"You found the sticky note!\nCode: {self.generate_code()}")
+            
+            messagebox.showinfo("Found!", f"You found the sticky note!\nCode: {self.generate_code()} \n ({remaining_time} seconds before code expires)")
             #print(self.generate_code())
 
 
