@@ -44,7 +44,7 @@ class Draggable:
 
     def on_release(self, event):
         
-        print("Mouse released at:", self.x_cord, self.y_cord)
+        #print("Mouse released at:", self.x_cord, self.y_cord)
         # When the drag is finished, call the callback function if provided.
         if self.on_drag_end:
             self.on_drag_end(self)
@@ -77,6 +77,6 @@ class TaskWindow(tk.Toplevel):
         self.task_listbox.delete(0, tk.END)
         for task in self.tasks:
             #Comment out the if statement to show all tasks (debugging purposes)
-            #if task ["completed"]:
+            if task ["completed"]:
                 status = "[✓]" if task["completed"] else "[ ]"
                 self.task_listbox.insert(tk.END, f"{status} {task['desc']}")
