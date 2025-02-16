@@ -50,12 +50,31 @@ class Draggable:
             self.on_drag_end(self)
 
 class Room:
-    def __init__(self, name: str, image_path: str, click_actions, drag_items: list):
+    def __init__(self, name: str, image_path: str, click_actions, drag_items: list, interact_items: list = None):
         self.name = name
         self.image_path = image_path
         self.click_actions = click_actions
         self.drag_items = drag_items
+        self.interact_items = interact_items
         self.exits = []
+
+class Interactive:
+    def __init__(self, canvas, image_path, x_cord, y_cord, x_size, y_size, callback):
+        self.canvas = canvas
+        self.image_path = image_path
+        self.x_cord = x_cord
+        self.y_cord = y_cord
+        self.x_size = x_size
+        self.y_size = y_size
+        self.callback = callback
+
+        self.image = Image.open(self.image_path).resize((self.x_size, self.y_size))
+        self.tk_image = ImageTk.PhotoImage(self.image)
+        self.id = self.canvas.create_image(self.x_cord, self.y_cord, image=self.tk_image)
+        self.canvas.tag_bind(self.id, "<ButtonPress-1>", self.callback)
+
+    def interact(self, event):
+        self.callback(event)
 
 
 class TaskWindow(tk.Toplevel):

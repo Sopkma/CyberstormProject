@@ -23,7 +23,7 @@ Mac: TBD
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
-from Classes import Draggable, Room, TaskWindow
+from Classes import Draggable, Interactive, Room, TaskWindow
 from GlobalFunctions import resource_path
 import random
 import string
@@ -47,6 +47,7 @@ class ThievesJourney(tk.Frame):
             "vigenere_decoded": False,  # Points #1
             "sticky_note_found": False,  # Points #1
             "door_unlocked": False,  # Points #3
+            "bookshelf_moved": False,  # Points #4
         }
 
         # Task list
@@ -54,12 +55,9 @@ class ThievesJourney(tk.Frame):
                         {"desc": "Decode Caesar cipher","completed": False,},
                         {"desc": "Decode Vigenère cipher","completed": False,},
                         {"desc": "Find sticky note (60 seconds)","completed": False,},
-                        {"desc": "Door unlocked","completed": False,}]
+                        {"desc": "Door unlocked","completed": False,},
+                        {"desc": "Move bookshelf","completed": False,}]
         self.task_window = TaskWindow(parent, self.tasks)
-        self.draggable_objects = []
-        self.drop_targets = []
-        self.interactions = []
-        self.dragging = False
         self.chest_locked = True
         self.door_locked = True
         self.last_code = None
@@ -71,19 +69,20 @@ class ThievesJourney(tk.Frame):
         self.check_code_update()
 
     def setup(self):
+        Room0 = Room("Room 0", resource_path("Room0.png"), [], [], [])
         Room1 = Room(
             "Room 1",
             resource_path("Room1.png"),
             [
-                ((24, 102, 140, 400), self.on_left_window_click),
-                ((0, 0, 0, 0), self.change_room),
-                ((95, 155, 540, 610), self.on_trashcan_click),
+                ((24, 102, 140, 400),  self.on_left_window_click),
+                ((0, 0, 0, 0),         self.change_room),
+                ((95, 155, 540, 610),  self.on_trashcan_click),
                 ((155, 190, 470, 495), self.on_treasure_chest_click),
                 ((388, 460, 405, 430), self.on_lock_click),
                 ((375, 550, 220, 585), self.on_door_click),
                 ((125, 350, 230, 295), self.on_caesar_cipher_click),
                 ((340, 370, 365, 385), self.on_light_switch_click),
-                ((305, 380, 95, 150), self.on_light_click),
+                ((305, 380, 95, 150),  self.on_light_click),
                 ((115, 373, 480, 595), self.on_desk_click),
                 ((598, 680, 140, 400), self.on_right_window_click),
             ],
@@ -91,14 +90,38 @@ class ThievesJourney(tk.Frame):
             [
                 Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10, self.on_key_drag_end),
                 Draggable(self.canvas, resource_path("clock.png"), 465, 170, 75, 75, self.on_clock_drag_end),
-            ]
+            ],
+            []
         )
 
         # For future use
-        Room0 = Room("Room 0", resource_path("Room0.png"), [], [])
-        Room2 = Room("Room 2", resource_path("Room2.jpg"), [], [])
-        Room3 = Room("Room 3", resource_path("Room3.png"), [], [])
-        Room4 = Room("Room 4", resource_path("Room4.png"), [], [])
+        
+        Room2 = Room(
+            "Room 2",
+            resource_path("Room2.png"),
+            [
+            ((5, 190, 10, 530), self.on_bookshelf_click),
+            ((45, 130, 100, 500), self.on_door2_clicked),
+            ],
+            [
+            ],
+            [
+            Interactive(self.canvas, resource_path("Bookshelf.png"), 100, 280, 200, 500, self.passing_function),
+            Interactive(self.canvas, resource_path("Book.png"), 170, 240, 20, 50, self.animate_bookshelf),
+            Interactive(self.canvas, resource_path("frame.png"), 500, 165, 100, 100, self.passing_function),
+            Interactive(self.canvas, resource_path("picture.png"), 500, 165, 75, 80, self.picture_interact),
+            #Interactive(self.canvas, resource_path("Stand.png"), 500, 430, 300, 300, self.passing_function),
+            ]
+        )
+        self.bookshelf_obj = Room2.interact_items[0]
+        self.book_obj = Room2.interact_items[1]
+        print(f"Bookshelf ID: {self.bookshelf_obj}")
+        self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
+        self.book_cords = self.canvas.coords(self.book_obj.id)
+        print(f"Bookshelf starting coords: {self.bookshelf_coords}")
+
+        Room3 = Room("Room 3", resource_path("Room3.png"), [], [], [])
+        Room4 = Room("Room 4", resource_path("Room4.png"), [], [], [])
 
         Room0.next_room = Room1
         Room1.next_room = Room2
@@ -106,7 +129,11 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room1
+        self.current_room = Room2
+
+        # Draw the current room background and any draggables.
+        self.resize_canvas(None, self.canvas)
+        
 
     def generate_code(self, length=20):
         current_time = time.time()
@@ -115,6 +142,7 @@ class ThievesJourney(tk.Frame):
             self.last_code = "".join(random.choices(string.hexdigits, k=length))
             self.last_update = current_time
         return self.last_code
+    
     def check_code_update(self):
         self.generate_code()
         remaining_time = int(self.update_code - (time.time() - self.last_update))
@@ -123,13 +151,16 @@ class ThievesJourney(tk.Frame):
             self.tasks[2]["completed"] = False
             self.task_window.update_tasks()
         self.after(1000, self.check_code_update)
-    def resize_canvas(self, event, canvas_var: 'tk.Canvas', path_to_image=None, draggables=None):
+    def resize_canvas(self, event, canvas_var: 'tk.Canvas', path_to_image=None, draggables=None, interactive_items=None):
 
         if path_to_image is None:
             path_to_image = self.current_room.image_path
 
         if draggables is None:
             draggables = self.current_room.drag_items
+
+        if interactive_items is None:
+            interactive_items = self.current_room.interact_items
         
         image_read = Image.open(path_to_image)
 
@@ -162,7 +193,16 @@ class ThievesJourney(tk.Frame):
             canvas_var.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
             canvas_var.tag_bind(item.id, "<B1-Motion>", lambda event, item=item: item.on_drag(event, root))
             canvas_var.tag_bind(item.id, "<ButtonRelease-1>", item.on_release)
+        for item in interactive_items:
+            item.x_size, item.x_cord = item.x_size * width_ratio, item.x_cord * width_ratio
+            item.y_size, item.y_cord = item.y_size * height_ratio, item.y_cord * height_ratio
 
+            item.image = item.image.resize((int(item.x_size), int(item.y_size)))
+            item.tk_image = ImageTk.PhotoImage(item.image)
+
+            item.id = canvas_var.create_image(item.x_cord, item.y_cord, image=item.tk_image)
+            
+            canvas_var.tag_bind(item.id, "<ButtonPress-1>", item.interact)
         self.windowWidthTracker = new_width
         self.windowHeightTracker = new_height
     def show_code_entry(self):
@@ -203,7 +243,7 @@ class ThievesJourney(tk.Frame):
             ##print("What are you looking for?")
             pass
 
-        ##print(f"Clicked at ({x}, {y})")
+        print(f"Clicked at ({x}, {y})")
     def on_release(self, event):
         x = (event.x * 700) // root.winfo_width()
         y = (event.y * 700) // root.winfo_height()
@@ -213,6 +253,7 @@ class ThievesJourney(tk.Frame):
         if self.current_room.next_room:
             self.current_room = self.current_room.next_room
             self.resize_canvas(None, self.canvas)
+
     def on_left_window_click(self):
         ##print("Left Window clicked!")
         pass
@@ -297,7 +338,7 @@ class ThievesJourney(tk.Frame):
 
     def on_door_click(self):
         #print("Door Clicked!")
-        if self.door_locked:
+        if not self.door_locked:
             messagebox.showinfo("Not Yet", "Enter the code to unlock.")
         else:
             self.change_room()
@@ -373,6 +414,52 @@ class ThievesJourney(tk.Frame):
             
             messagebox.showinfo("Found!", f"You found the sticky note!\nCode: {self.generate_code()} \n ({remaining_time} seconds before code expires)")
             #print(self.generate_code())
+
+    def on_bookshelf_click(self):
+        print("Bookshelf clicked!")
+        pass
+    book_moved = False
+    def animate_bookshelf(self, event):
+        if not self.book_moved:
+            # Move bookshelf to the right
+            for _ in range(25):
+                self.canvas.move(self.bookshelf_obj.id, 5, 0)
+                self.canvas.move(self.book_obj.id, 5, 0)
+                self.canvas.update()
+                self.canvas.after(10)
+            self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
+            self.book_cords = self.canvas.coords(self.book_obj.id)
+            self.book_moved = True
+            self.current_room.click_actions = [
+            action for action in self.current_room.click_actions
+            if action[1] != self.on_bookshelf_click]
+            self.game_state["bookshelf_moved"] = True
+            self.tasks[4]["completed"] = True
+            self.task_window.update_tasks()
+        else:
+            # Move bookshelf back to its original position
+            for _ in range(25):
+                self.canvas.move(self.bookshelf_obj.id, -5, 0)
+                self.canvas.move(self.book_obj.id, -5, 0)
+                self.canvas.update()
+                self.canvas.after(10)
+            self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
+            self.book_cords = self.canvas.coords(self.book_obj.id)
+            self.book_moved = False
+        
+        print(f"Bookshelf ending coords: {self.bookshelf_coords}")
+    
+    def on_door2_clicked(self):
+        #print("Door 2 clicked!")
+        self.change_room()
+    
+    def picture_interact(self, event):
+        print("Picture clicked!")
+        
+        pass
+
+    def passing_function(self, event):
+        pass
 
 
     def play(self):
