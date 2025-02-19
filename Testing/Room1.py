@@ -48,6 +48,8 @@ class ThievesJourney(tk.Frame):
             "sticky_note_found": False,  # Points #1
             "door_unlocked": False,  # Points #3
             "bookshelf_moved": False,  # Points #4
+            "Timo found": False,
+            "Anky found": False
         }
 
         # Task list
@@ -56,10 +58,13 @@ class ThievesJourney(tk.Frame):
                         {"desc": "Decode Vigenère cipher","completed": False,},
                         {"desc": "Find sticky note (60 seconds)","completed": False,},
                         {"desc": "Door unlocked","completed": False,},
-                        {"desc": "Move bookshelf","completed": False,}]
+                        {"desc": "Move bookshelf","completed": False,},
+                        {"desc": "Find Timo","completed": False,},
+                        {"desc": "Find Anky","completed": False,}]
         self.task_window = TaskWindow(parent, self.tasks)
         self.chest_locked = True
         self.door_locked = True
+        self.door2_locked = True
         self.last_code = None
         self.last_update = 0
         self.update_code = 60
@@ -100,6 +105,8 @@ class ThievesJourney(tk.Frame):
             "Room 2",
             resource_path("Room2.png"),
             [
+            ((70, 87, 290, 323), self.on_Timo_click),
+            ((150, 168, 229, 264), self.on_Anky_click),
             ((5, 190, 10, 530), self.on_bookshelf_click),
             ((45, 130, 100, 500), self.on_door2_clicked),
             ],
@@ -107,10 +114,12 @@ class ThievesJourney(tk.Frame):
             ],
             [
             Interactive(self.canvas, resource_path("Bookshelf.png"), 100, 280, 200, 500, self.passing_function),
-            Interactive(self.canvas, resource_path("Book.png"), 170, 240, 20, 50, self.animate_bookshelf),
+            Interactive(self.canvas, resource_path("greedbook.png"), 135, 174, 10, 47, self.animate_bookshelf),
             Interactive(self.canvas, resource_path("frame.png"), 500, 165, 100, 100, self.passing_function),
             Interactive(self.canvas, resource_path("picture.png"), 500, 165, 75, 80, self.picture_interact),
-            #Interactive(self.canvas, resource_path("Stand.png"), 500, 430, 300, 300, self.passing_function),
+            Interactive(self.canvas, resource_path("table.png"), 500, 450, 200, 200, self.passing_function),
+            Interactive(self.canvas, resource_path("alarmclock.png"), 550, 355, 50, 25, self.passing_function),
+            Interactive(self.canvas, resource_path("clock2.png"), 300, 96, 75, 75, self.passing_function),
             ]
         )
         self.bookshelf_obj = Room2.interact_items[0]
@@ -235,6 +244,8 @@ class ThievesJourney(tk.Frame):
     def on_click(self, event):
         x = (event.x * 700) // root.winfo_width()
         y = (event.y * 700) // root.winfo_height()
+
+        
         for (x1, x2, y1, y2), action in self.current_room.click_actions:
             if x1 <= x <= x2 and y1 <= y <= y2:
                 action()
@@ -338,7 +349,7 @@ class ThievesJourney(tk.Frame):
 
     def on_door_click(self):
         #print("Door Clicked!")
-        if not self.door_locked:
+        if self.door_locked:
             messagebox.showinfo("Not Yet", "Enter the code to unlock.")
         else:
             self.change_room()
@@ -420,39 +431,89 @@ class ThievesJourney(tk.Frame):
         pass
     book_moved = False
     def animate_bookshelf(self, event):
-        if not self.book_moved:
-            # Move bookshelf to the right
-            for _ in range(25):
-                self.canvas.move(self.bookshelf_obj.id, 5, 0)
-                self.canvas.move(self.book_obj.id, 5, 0)
-                self.canvas.update()
-                self.canvas.after(10)
-            self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
-            self.book_cords = self.canvas.coords(self.book_obj.id)
-            self.book_moved = True
-            self.current_room.click_actions = [
-            action for action in self.current_room.click_actions
-            if action[1] != self.on_bookshelf_click]
-            self.game_state["bookshelf_moved"] = True
-            self.tasks[4]["completed"] = True
-            self.task_window.update_tasks()
-        else:
-            # Move bookshelf back to its original position
-            for _ in range(25):
-                self.canvas.move(self.bookshelf_obj.id, -5, 0)
-                self.canvas.move(self.book_obj.id, -5, 0)
-                self.canvas.update()
-                self.canvas.after(10)
-            self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
-            self.book_cords = self.canvas.coords(self.book_obj.id)
-            self.book_moved = False
+        if not self.door2_locked:
+            if not self.book_moved:
+                # Move bookshelf to the right
+                for _ in range(25):
+                    self.canvas.move(self.bookshelf_obj.id, 5, 0)
+                    self.canvas.move(self.book_obj.id, 5, 0)
+                    self.canvas.update()
+                    self.canvas.after(10)
+                self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
+                self.book_cords = self.canvas.coords(self.book_obj.id)
+                self.book_moved = True
+                self.current_room.click_actions = [
+                action for action in self.current_room.click_actions
+                if action[1] != self.on_bookshelf_click]
+                self.game_state["bookshelf_moved"] = True
+                self.tasks[4]["completed"] = True
+                self.task_window.update_tasks()
+            else:
+                # Move bookshelf back to its original position
+                for _ in range(25):
+                    self.canvas.move(self.bookshelf_obj.id, -5, 0)
+                    self.canvas.move(self.book_obj.id, -5, 0)
+                    self.canvas.update()
+                    self.canvas.after(10)
+                self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
+                self.book_cords = self.canvas.coords(self.book_obj.id)
+                self.book_moved = False
         
-        print(f"Bookshelf ending coords: {self.bookshelf_coords}")
+            print(f"Bookshelf ending coords: {self.bookshelf_coords}")
     
     def on_door2_clicked(self):
         #print("Door 2 clicked!")
         self.change_room()
     
+    def on_Timo_click(self):
+        #Enter the name of the person
+        self.code_window = tk.Toplevel(root)
+        self.code_window.title("Easteregg")
+        self.code_window.geometry("200x200")
+        tk.Label(self.code_window, text="Enter the answer: ").pack(pady=10)
+        self.code_entry = tk.Entry(self.code_window)
+        self.code_entry.pack(pady=10)
+        tk.Button(self.code_window, text="Submit", command=self.check_timo).pack(pady=10)
+        self.task_window.update_tasks()
+
+    def check_timo(self):
+        entered_code = self.code_entry.get().strip().lower()
+        # if self.game_state["caesar_decoded"]:
+        #     return
+        if entered_code == "timo":
+            messagebox.showinfo("Success", "Timo found!")
+            self.code_window.destroy()
+            self.door2_locked = False
+            # self.game_state["caesar_decoded"] = True
+            # self.tasks[0]["completed"] = True
+            # self.task_window.update_tasks()
+        else:
+            messagebox.showerror("Error", "Incorrect answer. Try again.")
+
+    def on_Anky_click(self):
+        #Enter the name of the person
+        self.code_window = tk.Toplevel(root)
+        self.code_window.title("Easteregg")
+        self.code_window.geometry("200x200")
+        tk.Label(self.code_window, text="Enter the answer: ").pack(pady=10)
+        self.code_entry = tk.Entry(self.code_window)
+        self.code_entry.pack(pady=10)
+        tk.Button(self.code_window, text="Submit", command=self.check_anky).pack(pady=10)
+        self.task_window.update_tasks()
+
+    def check_anky(self):
+        entered_code = self.code_entry.get().strip().lower()
+        # if self.game_state["caesar_decoded"]:
+        #     return
+        if entered_code == "anky":
+            messagebox.showinfo("Success", "Anky found!")
+            self.code_window.destroy()
+            self.door2_locked = False
+            # self.game_state["caesar_decoded"] = True
+            # self.tasks[0]["completed"] = True
+            # self.task_window.update_tasks()
+        else:
+            messagebox.showerror("Error", "Incorrect answer. Try again.")
     def picture_interact(self, event):
         print("Picture clicked!")
         
