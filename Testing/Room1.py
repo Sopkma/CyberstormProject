@@ -48,8 +48,8 @@ class ThievesJourney(tk.Frame):
             "sticky_note_found": False,  # Points #1
             "door_unlocked": False,  # Points #3
             "bookshelf_moved": False,  # Points #4
-            "Timo found": False,
-            "Anky found": False
+            "timo_found": False,
+            "anky_found": False
         }
 
         # Task list
@@ -138,7 +138,7 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room2
+        self.current_room = Room1
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
@@ -477,16 +477,16 @@ class ThievesJourney(tk.Frame):
         self.task_window.update_tasks()
 
     def check_timo(self):
+        if self.game_state["timo_found"]:
+            return
         entered_code = self.code_entry.get().strip().lower()
-        # if self.game_state["caesar_decoded"]:
-        #     return
         if entered_code == "timo":
             messagebox.showinfo("Success", "Timo found!")
             self.code_window.destroy()
             self.door2_locked = False
-            # self.game_state["caesar_decoded"] = True
-            # self.tasks[0]["completed"] = True
-            # self.task_window.update_tasks()
+            self.game_state["timo_found"] = True
+            self.tasks[5]["completed"] = True
+            self.task_window.update_tasks()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")
 
@@ -503,15 +503,15 @@ class ThievesJourney(tk.Frame):
 
     def check_anky(self):
         entered_code = self.code_entry.get().strip().lower()
-        # if self.game_state["caesar_decoded"]:
-        #     return
+        if self.game_state["anky_found"]:
+            return
         if entered_code == "anky":
             messagebox.showinfo("Success", "Anky found!")
             self.code_window.destroy()
             self.door2_locked = False
-            # self.game_state["caesar_decoded"] = True
-            # self.tasks[0]["completed"] = True
-            # self.task_window.update_tasks()
+            self.game_state["anky_found"] = True
+            self.tasks[6]["completed"] = True
+            self.task_window.update_tasks()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")
     def picture_interact(self, event):
