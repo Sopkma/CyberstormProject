@@ -65,6 +65,7 @@ class ThievesJourney(tk.Frame):
         self.chest_locked = True
         self.door_locked = True
         self.door2_locked = True
+        self.bookLocked = False
         self.last_code = None
         self.last_update = 0
         self.update_code = 60
@@ -138,7 +139,7 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room1
+        self.current_room = Room2
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
@@ -431,7 +432,7 @@ class ThievesJourney(tk.Frame):
         pass
     book_moved = False
     def animate_bookshelf(self, event):
-        if not self.door2_locked:
+        if not self.bookLocked:
             if not self.book_moved:
                 # Move bookshelf to the right
                 for _ in range(25):
@@ -458,12 +459,39 @@ class ThievesJourney(tk.Frame):
                 self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
                 self.book_cords = self.canvas.coords(self.book_obj.id)
                 self.book_moved = False
-        
-            print(f"Bookshelf ending coords: {self.bookshelf_coords}")
-    
+        else:
+            remaining_time = int(self.cooldown_end_time - time.time())
+            messagebox.showinfo("Cooldown", f"Please wait {remaining_time} seconds before trying again.")
     def on_door2_clicked(self):
         #print("Door 2 clicked!")
-        self.change_room()
+        self.code_window = tk.Toplevel(root)
+        self.code_window.title("Locked")
+        self.code_window.geometry("200x200")
+        tk.Label(self.code_window, text="Code: ").pack(pady=10)
+        self.code_entry = tk.Entry(self.code_window)
+        self.code_entry.pack(pady=10)
+        tk.Button(self.code_window, text="Submit", command=self.door2_check).pack(pady=10)
+        self.task_window.update_tasks()
+
+    def door2_check(self):
+        entered_code = self.code_entry.get().strip().lower()
+        if entered_code == "21011":
+            self.door2_locked = False
+            self.task_window.update_tasks()
+            self.code_window.destroy()
+            self.change_room()
+        else:
+            self.code_window.destroy()
+            self.animate_bookshelf(None)
+            self.bookLocked = True
+            cooldown = 60 * (2 ** self.tasks[4].get("attempts", 0))
+            self.tasks[4]["attempts"] = self.tasks[4].get("attempts", 0) + 1
+            self.cooldown_end_time = time.time() + cooldown
+            self.after(cooldown * 1000, self.unlock_book)
+
+    def unlock_book(self):
+        self.bookLocked = False
+
     
     def on_Timo_click(self):
         #Enter the name of the person
@@ -483,7 +511,6 @@ class ThievesJourney(tk.Frame):
         if entered_code == "timo":
             messagebox.showinfo("Success", "Timo found!")
             self.code_window.destroy()
-            self.door2_locked = False
             self.game_state["timo_found"] = True
             self.tasks[5]["completed"] = True
             self.task_window.update_tasks()
@@ -508,7 +535,6 @@ class ThievesJourney(tk.Frame):
         if entered_code == "anky":
             messagebox.showinfo("Success", "Anky found!")
             self.code_window.destroy()
-            self.door2_locked = False
             self.game_state["anky_found"] = True
             self.tasks[6]["completed"] = True
             self.task_window.update_tasks()
