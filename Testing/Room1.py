@@ -88,7 +88,9 @@ class ThievesJourney(tk.Frame):
                 ((332, 362, 563, 630),  self.change_room)
             ], 
             [], 
-            []
+            [
+                Interactive(self.canvas, resource_path("task.png"), 630, 30, 50, 50, self.on_task_click),
+            ]
         )
         Room1 = Room(
             "Room 1",
@@ -156,7 +158,9 @@ class ThievesJourney(tk.Frame):
             [
             ], 
             [
-            ])
+                Interactive(self.canvas, resource_path("task.png"), 630, 30, 50, 50, self.on_task_click),
+            ]
+        )
         Room4 = Room("Room 4", resource_path("Room4.png"), [], [], [])
 
         Room0.next_room = Room1
@@ -165,7 +169,7 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room0
+        self.current_room = Room2
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
