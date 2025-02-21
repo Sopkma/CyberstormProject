@@ -43,25 +43,31 @@ class ThievesJourney(tk.Frame):
         self.windowHeightTracker = 700
 
         self.game_state = {
-            "caesar_decoded": False,  # Points #2
-            "vigenere_decoded": False,  # Points #1
-            "sticky_note_found": False,  # Points #1
-            "door_unlocked": False,  # Points #3
-            "bookshelf_moved": False,  # Points #4
+            "caesar_decoded": False,
+            "vigenere_decoded": False,
+            "sticky_note_found": False,
+            "door_unlocked": False,
+            "room1_Completed": False,
             "timo_found": False,
-            "anky_found": False
+            "anky_found": False,
+            "Steg_decoded": False,
+            "bookshelf_moved": False,
+            "Door2_unlocked": False
         }
 
         # Task list
         self.tasks = [  
-                        {"desc": "Decode Caesar cipher","completed": False,},
-                        {"desc": "Decode Vigenère cipher","completed": False,},
-                        {"desc": "Find sticky note (60 seconds)","completed": False,},
-                        {"desc": "Door unlocked","completed": False,},
-                        {"desc": "Move bookshelf","completed": False,},
-                        {"desc": "Find Timo","completed": False,},
-                        {"desc": "Find Anky","completed": False,}]
-        self.task_window = TaskWindow(parent, self.tasks)
+{"desc": "Decode Caesar cipher","completed": False, "points": 987},
+                        {"desc": "Decode Vigenère cipher","completed": False, "points": 2584},
+                        {"desc": "Find sticky note (60 seconds)","completed": False,"points": 610},
+                        {"desc": "Door unlocked","completed": False,"points": 6765},
+                        {"desc": "Find Timo","completed": False,"points": 55},
+                        {"desc": "Find Anky","completed": False,"points": 55},
+                        {"desc": "Decode Steg","completed": False,"points": 4181},
+                        {"desc": "Move bookshelf","completed": False,"points": 610},
+                        {"desc": "Door 2 unlocked","completed": False,"points": 6765},
+                        ] 
+        self.task_window = None
         self.chest_locked = True
         self.door_locked = True
         self.door2_locked = True
@@ -71,7 +77,7 @@ class ThievesJourney(tk.Frame):
         self.update_code = 60
         self.seed = 8264006
         random.seed(self.seed)
-
+        self.score = 10946
         self.check_code_update()
 
     def setup(self):
@@ -97,7 +103,9 @@ class ThievesJourney(tk.Frame):
                 Draggable(self.canvas, resource_path("key.png"), 465, 170, 10, 10, self.on_key_drag_end),
                 Draggable(self.canvas, resource_path("clock.png"), 465, 170, 75, 75, self.on_clock_drag_end),
             ],
-            []
+            [
+                Interactive(self.canvas, resource_path("task.png"), 630, 50, 50, 50, self.on_task_click),
+            ]
         )
 
         # For future use
@@ -121,6 +129,8 @@ class ThievesJourney(tk.Frame):
             Interactive(self.canvas, resource_path("table.png"), 500, 450, 200, 200, self.passing_function),
             Interactive(self.canvas, resource_path("alarmclock.png"), 550, 355, 50, 25, self.passing_function),
             Interactive(self.canvas, resource_path("clock2.png"), 300, 96, 75, 75, self.passing_function),
+            Interactive(self.canvas, resource_path("task.png"), 630, 30, 50, 50, self.on_task_click),
+
             ]
         )
         self.bookshelf_obj = Room2.interact_items[0]
@@ -139,12 +149,21 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room2
+        self.current_room = Room1
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
         
+    def on_task_click(self, event):
+        if self.task_window is None or not self.task_window.winfo_exists():
+            self.task_window = TaskWindow(self, self.tasks, self.score)
+        else:
+            self.task_window.focus()
 
+    def update_score(self):
+        self.score = sum(task["points"] for task in self.tasks if task["completed"])
+        if self.task_window:
+            self.task_window.update_tasks()
     def generate_code(self, length=20):
         current_time = time.time()
         # Change code after a set time interval. (Change time at self.update_code)
@@ -159,7 +178,7 @@ class ThievesJourney(tk.Frame):
         if self.game_state["sticky_note_found"] and remaining_time <= 0:
             self.game_state["sticky_note_found"] = False
             self.tasks[2]["completed"] = False
-            self.task_window.update_tasks()
+            self.update_score()
         self.after(1000, self.check_code_update)
     def resize_canvas(self, event, canvas_var: 'tk.Canvas', path_to_image=None, draggables=None, interactive_items=None):
 
@@ -238,7 +257,7 @@ class ThievesJourney(tk.Frame):
             self.code_window.destroy()
             self.door_locked = False
             self.tasks[3]["completed"] = True
-            self.task_window.update_tasks()
+            self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect code. Try again.")
             print(third)
@@ -272,7 +291,7 @@ class ThievesJourney(tk.Frame):
 
     def on_trashcan_click(self):
         if hasattr(self, "trashcan_window") and self.trashcan_window is not None and self.trashcan_window.winfo_exists():
-            ##print("Trashcan is already open!")
+            self.task_window.focus()
             return
 
         #print("Opening Trashcan!")
@@ -327,7 +346,7 @@ class ThievesJourney(tk.Frame):
                 self.code_entry = tk.Entry(self.code_window)
                 self.code_entry.pack(pady=10)
                 tk.Button(self.code_window, text="Submit", command=self.check_vigenere_code).pack(pady=10)
-                self.task_window.update_tasks()
+                self.update_score()
 
     def check_vigenere_code(self):
         if self.game_state["vigenere_decoded"]:
@@ -338,7 +357,7 @@ class ThievesJourney(tk.Frame):
             self.code_window.destroy()
             self.game_state["vigenere_decoded"] = True
             self.tasks[1]["completed"] = True
-            self.task_window.update_tasks()
+            self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")        
 
@@ -366,7 +385,7 @@ class ThievesJourney(tk.Frame):
             self.code_entry = tk.Entry(self.code_window)
             self.code_entry.pack(pady=10)
             tk.Button(self.code_window, text="Submit", command=self.check_caesar_code).pack(pady=10)
-            self.task_window.update_tasks()
+            self.update_score()
 
     def check_caesar_code(self):
         entered_code = self.code_entry.get().strip().lower()
@@ -377,7 +396,7 @@ class ThievesJourney(tk.Frame):
             self.code_window.destroy()
             self.game_state["caesar_decoded"] = True
             self.tasks[0]["completed"] = True
-            self.task_window.update_tasks()
+            self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")
 
@@ -421,7 +440,7 @@ class ThievesJourney(tk.Frame):
         else:
             self.game_state["sticky_note_found"] = True
             self.tasks[2]["completed"] = True
-            self.task_window.update_tasks()
+            self.update_score()
             #print("Sticky note found!")
             
             messagebox.showinfo("Found!", f"You found the sticky note!\nCode: {self.generate_code()} \n ({remaining_time} seconds before code expires)")
@@ -447,8 +466,8 @@ class ThievesJourney(tk.Frame):
                 action for action in self.current_room.click_actions
                 if action[1] != self.on_bookshelf_click]
                 self.game_state["bookshelf_moved"] = True
-                self.tasks[4]["completed"] = True
-                self.task_window.update_tasks()
+                self.tasks[7]["completed"] = True
+                self.update_score()
             else:
                 # Move bookshelf back to its original position
                 for _ in range(25):
@@ -471,21 +490,24 @@ class ThievesJourney(tk.Frame):
         self.code_entry = tk.Entry(self.code_window)
         self.code_entry.pack(pady=10)
         tk.Button(self.code_window, text="Submit", command=self.door2_check).pack(pady=10)
-        self.task_window.update_tasks()
+        self.update_score()
 
     def door2_check(self):
         entered_code = self.code_entry.get().strip().lower()
         if entered_code == "21011":
             self.door2_locked = False
-            self.task_window.update_tasks()
+            self.game_state["door2_unlocked"] = True
+            self.tasks[8]["completed"] = True
+            self.update_score()
             self.code_window.destroy()
             self.change_room()
+
         else:
             self.code_window.destroy()
             self.animate_bookshelf(None)
             self.bookLocked = True
-            cooldown = 60 * (2 ** self.tasks[4].get("attempts", 0))
-            self.tasks[4]["attempts"] = self.tasks[4].get("attempts", 0) + 1
+            cooldown = 60 * (2 ** self.tasks[7].get("attempts", 0))
+            self.tasks[7]["attempts"] = self.tasks[7].get("attempts", 0) + 1
             self.cooldown_end_time = time.time() + cooldown
             self.after(cooldown * 1000, self.unlock_book)
 
@@ -502,7 +524,7 @@ class ThievesJourney(tk.Frame):
         self.code_entry = tk.Entry(self.code_window)
         self.code_entry.pack(pady=10)
         tk.Button(self.code_window, text="Submit", command=self.check_timo).pack(pady=10)
-        self.task_window.update_tasks()
+        self.update_score()
 
     def check_timo(self):
         if self.game_state["timo_found"]:
@@ -512,8 +534,8 @@ class ThievesJourney(tk.Frame):
             messagebox.showinfo("Success", "Timo found!")
             self.code_window.destroy()
             self.game_state["timo_found"] = True
-            self.tasks[5]["completed"] = True
-            self.task_window.update_tasks()
+            self.tasks[4]["completed"] = True
+            self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")
 
@@ -526,7 +548,7 @@ class ThievesJourney(tk.Frame):
         self.code_entry = tk.Entry(self.code_window)
         self.code_entry.pack(pady=10)
         tk.Button(self.code_window, text="Submit", command=self.check_anky).pack(pady=10)
-        self.task_window.update_tasks()
+        self.update_score()
 
     def check_anky(self):
         entered_code = self.code_entry.get().strip().lower()
@@ -536,15 +558,30 @@ class ThievesJourney(tk.Frame):
             messagebox.showinfo("Success", "Anky found!")
             self.code_window.destroy()
             self.game_state["anky_found"] = True
-            self.tasks[6]["completed"] = True
-            self.task_window.update_tasks()
+            self.tasks[5]["completed"] = True
+            self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")
     def picture_interact(self, event):
-        print("Picture clicked!")
-        
-        pass
-
+        self.code_window = tk.Toplevel(root)
+        self.code_window.title("Flag")
+        self.code_window.geometry("200x200")
+        tk.Label(self.code_window, text="Enter the answer: ").pack(pady=10)
+        self.code_entry = tk.Entry(self.code_window)
+        self.code_entry.pack(pady=10)
+        tk.Button(self.code_window, text="Submit", command=self.check_steg).pack(pady=10)
+        self.update_score()
+    def check_steg(self):
+        entered_code = self.code_entry.get().strip().lower()
+        if self.game_state["Steg_decoded"]:
+            return
+        if entered_code == "yt":
+            self.code_window.destroy()
+            self.game_state["Steg_decoded"] = True
+            self.tasks[6]["completed"] = True
+            self.update_score()
+        else:
+            messagebox.showerror("Error", "Incorrect answer. Try again.")
     def passing_function(self, event):
         pass
 

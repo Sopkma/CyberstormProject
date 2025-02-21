@@ -78,12 +78,13 @@ class Interactive:
 
 
 class TaskWindow(tk.Toplevel):
-    def __init__(self, master, tasks):
+    def __init__(self, master, tasks, score):
         super().__init__(master)
         self.title("Tasks")
         # Set a fixed geometry for the task window (e.g., width=250, height=700)
         self.geometry("250x250")
         self.tasks = tasks
+        self.score = score
         self.create_widgets()
 
     def create_widgets(self):
@@ -96,6 +97,7 @@ class TaskWindow(tk.Toplevel):
         self.task_listbox.delete(0, tk.END)
         for task in self.tasks:
             #Comment out the if statement to show all tasks (debugging purposes)
-            if task ["completed"]:
+            #if task ["completed"]:
                 status = "[✓]" if task["completed"] else "[ ]"
                 self.task_listbox.insert(tk.END, f"{status} {task['desc']}")
+        self.task_listbox.insert(tk.END, f"Score: {self.master.score + 10946}")
