@@ -149,7 +149,7 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room2
+        self.current_room = Room1
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
@@ -337,16 +337,16 @@ class ThievesJourney(tk.Frame):
         if self.chest_locked:
             messagebox.showwarning("Locked", "You need a key to open the treasure chest!")
         else:
-                #messagebox.showinfo("Message", "Vwim Mcdrfl Fayi Smdyp Wrhlcv Nblxi Imkym Gexjy Iincf Xfjku Ommynzvl Vlzzppd Gjiv Vsymi Fayi Smdyp Dfrupfn Smdyp Mjwbp Dclc Jcfpiu Uyeap Gexjy Tbbpccf Izfp Wrhlcv Hptvgcci Itarl Uyeap Ctbp Gexjy Jcfpiu Eccnb Mjwbp Fmdyi Lpkvi Mgdu Pqtus Ayusjzy Lgci Dfrlmgv Itarl Eccnb Ctbp")
-                self.code_window = tk.Toplevel(root)
-                self.code_window.title("Flag")
-                self.code_window.geometry("200x200")
+            messagebox.showinfo("Message", "Vwim Mcdrfl Fayi Smdyp Wrhlcv Nblxi Imkym Gexjy Iincf Xfjku Ommynzvl Vlzzppd Gjiv Vsymi Fayi Smdyp Dfrupfn Smdyp Mjwbp Dclc Jcfpiu Uyeap Gexjy Tbbpccf Izfp Wrhlcv Hptvgcci Itarl Uyeap Ctbp Gexjy Jcfpiu Eccnb Mjwbp Fmdyi Lpkvi Mgdu Pqtus Ayusjzy Lgci Dfrlmgv Itarl Eccnb Ctbp")
+            self.code_window = tk.Toplevel(root)
+            self.code_window.title("Flag")
+            self.code_window.geometry("200x200")
 
-                tk.Label(self.code_window, text="E for ?").pack(pady=10)
-                self.code_entry = tk.Entry(self.code_window)
-                self.code_entry.pack(pady=10)
-                tk.Button(self.code_window, text="Submit", command=self.check_vigenere_code).pack(pady=10)
-                self.update_score()
+            tk.Label(self.code_window, text="E for ?").pack(pady=10)
+            self.code_entry = tk.Entry(self.code_window)
+            self.code_entry.pack(pady=10)
+            tk.Button(self.code_window, text="Submit", command=self.check_vigenere_code).pack(pady=10)
+            self.update_score()
 
     def check_vigenere_code(self):
         if self.game_state["vigenere_decoded"]:
@@ -416,11 +416,19 @@ class ThievesJourney(tk.Frame):
         key_x, key_y = draggable.x_cord, draggable.y_cord
         #print("Key realeased at:", key_x, key_y)
         if chest_x1 <= key_x <= chest_x2 and chest_y1 <= key_y <= chest_y2:
-            messagebox.showinfo("Chest unlocked!","Click chest again for flag")
             messagebox.showinfo("Message", "Vwim Mcdrfl Fayi Smdyp Wrhlcv Nblxi Imkym Gexjy Iincf Xfjku Ommynzvl Vlzzppd Gjiv Vsymi Fayi Smdyp Dfrupfn Smdyp Mjwbp Dclc Jcfpiu Uyeap Gexjy Tbbpccf Izfp Wrhlcv Hptvgcci Itarl Uyeap Ctbp Gexjy Jcfpiu Eccnb Mjwbp Fmdyi Lpkvi Mgdu Pqtus Ayusjzy Lgci Dfrlmgv Itarl Eccnb Ctbp")
             self.chest_locked = False
             self.canvas.delete(draggable.id)
             self.current_room.drag_items.remove(draggable)
+            self.code_window = tk.Toplevel(root)
+            self.code_window.title("Flag")
+            self.code_window.geometry("200x200")
+
+            tk.Label(self.code_window, text="E for ?").pack(pady=10)
+            self.code_entry = tk.Entry(self.code_window)
+            self.code_entry.pack(pady=10)
+            tk.Button(self.code_window, text="Submit", command=self.check_vigenere_code).pack(pady=10)
+            self.update_score()
 
 
     def on_desk_click(self):
