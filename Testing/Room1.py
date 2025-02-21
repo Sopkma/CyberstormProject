@@ -122,19 +122,19 @@ class ThievesJourney(tk.Frame):
             [
             ],
             [
+            Interactive(self.canvas, resource_path("clock2.png"), 300, 96, 75, 75, self.passing_function),
             Interactive(self.canvas, resource_path("Bookshelf.png"), 100, 280, 200, 500, self.passing_function),
             Interactive(self.canvas, resource_path("greedbook.png"), 135, 174, 10, 47, self.animate_bookshelf),
             Interactive(self.canvas, resource_path("frame.png"), 500, 165, 100, 100, self.passing_function),
             Interactive(self.canvas, resource_path("picture.png"), 500, 165, 75, 80, self.picture_interact),
             Interactive(self.canvas, resource_path("table.png"), 500, 450, 200, 200, self.passing_function),
             Interactive(self.canvas, resource_path("alarmclock.png"), 550, 355, 50, 25, self.passing_function),
-            Interactive(self.canvas, resource_path("clock2.png"), 300, 96, 75, 75, self.passing_function),
             Interactive(self.canvas, resource_path("task.png"), 630, 30, 50, 50, self.on_task_click),
 
             ]
         )
-        self.bookshelf_obj = Room2.interact_items[0]
-        self.book_obj = Room2.interact_items[1]
+        self.bookshelf_obj = Room2.interact_items[1]
+        self.book_obj = Room2.interact_items[2]
         print(f"Bookshelf ID: {self.bookshelf_obj}")
         self.bookshelf_coords = self.canvas.coords(self.bookshelf_obj.id)
         self.book_cords = self.canvas.coords(self.book_obj.id)
@@ -149,7 +149,7 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room1
+        self.current_room = Room2
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
