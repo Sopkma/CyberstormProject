@@ -97,7 +97,7 @@ class TaskWindow(tk.Toplevel):
         self.task_listbox.delete(0, tk.END)
         for task in self.tasks:
             #Comment out the if statement to show all tasks (debugging purposes)
-            #if task ["completed"]:
+            if task ["completed"]:
                 status = "[✓]" if task["completed"] else "[ ]"
                 self.task_listbox.insert(tk.END, f"{status} {task['desc']}")
         self.task_listbox.insert(tk.END, f"Score: {self.master.score + 10946}")

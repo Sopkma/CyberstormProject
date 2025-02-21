@@ -57,7 +57,7 @@ class ThievesJourney(tk.Frame):
 
         # Task list
         self.tasks = [  
-{"desc": "Decode Caesar cipher","completed": False, "points": 987},
+                        {"desc": "Decode Caesar cipher","completed": False, "points": 987},
                         {"desc": "Decode Vigenère cipher","completed": False, "points": 2584},
                         {"desc": "Find sticky note (60 seconds)","completed": False,"points": 610},
                         {"desc": "Door unlocked","completed": False,"points": 6765},
@@ -74,20 +74,27 @@ class ThievesJourney(tk.Frame):
         self.bookLocked = False
         self.last_code = None
         self.last_update = 0
-        self.update_code = 60
+        self.update_code = 300
         self.seed = 8264006
         random.seed(self.seed)
         self.score = 10946
         self.check_code_update()
 
     def setup(self):
-        Room0 = Room("Room 0", resource_path("Room0.png"), [], [], [])
+        Room0 = Room(
+            "Room 0",
+            resource_path("Room0.png"),
+            [
+                ((332, 362, 563, 630),  self.change_room)
+            ], 
+            [], 
+            []
+        )
         Room1 = Room(
             "Room 1",
             resource_path("Room1.png"),
             [
                 ((24, 102, 140, 400),  self.on_left_window_click),
-                ((0, 0, 0, 0),         self.change_room),
                 ((95, 155, 540, 610),  self.on_trashcan_click),
                 ((155, 190, 470, 495), self.on_treasure_chest_click),
                 ((388, 460, 405, 430), self.on_lock_click),
@@ -140,7 +147,16 @@ class ThievesJourney(tk.Frame):
         self.book_cords = self.canvas.coords(self.book_obj.id)
         print(f"Bookshelf starting coords: {self.bookshelf_coords}")
 
-        Room3 = Room("Room 3", resource_path("Room3.png"), [], [], [])
+        Room3 = Room(
+            "Room 3", 
+            resource_path("Room3.png"), 
+            [
+                ((324, 364, 444, 480), self.on_final_note_click)
+            ], 
+            [
+            ], 
+            [
+            ])
         Room4 = Room("Room 4", resource_path("Room4.png"), [], [], [])
 
         Room0.next_room = Room1
@@ -149,7 +165,7 @@ class ThievesJourney(tk.Frame):
         Room3.next_room = Room4
 
         self.rooms = [Room0, Room1, Room2, Room3, Room4]
-        self.current_room = Room1
+        self.current_room = Room0
 
         # Draw the current room background and any draggables.
         self.resize_canvas(None, self.canvas)
@@ -327,11 +343,6 @@ class ThievesJourney(tk.Frame):
             trashcan_canvas.tag_bind(item.id, "<ButtonPress-1>", item.on_press)
             trashcan_canvas.tag_bind(item.id, "<B1-Motion>", lambda event, item=item: item.on_drag(event, root))
 
-
-    def on_trashcan_close(self):
-        self.trashcan_window.destroy()
-        self.trashcan_window = None
-
     def on_treasure_chest_click(self):
         #print("Treasure Chest clicked!")
         if self.chest_locked:
@@ -360,8 +371,6 @@ class ThievesJourney(tk.Frame):
             self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")        
-
-                
 
     def on_lock_click(self):
         #print("Lock Clicked!")
@@ -487,37 +496,40 @@ class ThievesJourney(tk.Frame):
                 self.book_cords = self.canvas.coords(self.book_obj.id)
                 self.book_moved = False
         else:
-            remaining_time = int(self.cooldown_end_time - time.time())
-            messagebox.showinfo("Cooldown", f"Please wait {remaining_time} seconds before trying again.")
+            self.remaining_time = int(self.cooldown_end_time - time.time())
+            messagebox.showinfo("Cooldown", f"Please wait {self.remaining_time} seconds before trying again.")
+
     def on_door2_clicked(self):
-        #print("Door 2 clicked!")
-        self.code_window = tk.Toplevel(root)
-        self.code_window.title("Locked")
-        self.code_window.geometry("200x200")
-        tk.Label(self.code_window, text="Code: ").pack(pady=10)
-        self.code_entry = tk.Entry(self.code_window)
-        self.code_entry.pack(pady=10)
-        tk.Button(self.code_window, text="Submit", command=self.door2_check).pack(pady=10)
-        self.update_score()
+        if not self.bookLocked:
+            #print("Door 2 clicked!")
+            self.code_window = tk.Toplevel(root)
+            self.code_window.title("Locked")
+            self.code_window.geometry("200x200")
+            tk.Label(self.code_window, text="Code: ").pack(pady=10)
+            self.code_entry = tk.Entry(self.code_window)
+            self.code_entry.pack(pady=10)
+            tk.Button(self.code_window, text="Submit", command=self.door2_check).pack(pady=10)
+            self.update_score()
 
     def door2_check(self):
         entered_code = self.code_entry.get().strip().lower()
-        if entered_code == "21011":
-            self.door2_locked = False
-            self.game_state["door2_unlocked"] = True
-            self.tasks[8]["completed"] = True
-            self.update_score()
-            self.code_window.destroy()
-            self.change_room()
+        if not self.bookLocked:
+            if entered_code == "21011":
+                self.door2_locked = False
+                self.game_state["door2_unlocked"] = True
+                self.tasks[8]["completed"] = True
+                self.update_score()
+                self.code_window.destroy()
+                self.change_room()
 
-        else:
-            self.code_window.destroy()
-            self.animate_bookshelf(None)
-            self.bookLocked = True
-            cooldown = 60 * (2 ** self.tasks[7].get("attempts", 0))
-            self.tasks[7]["attempts"] = self.tasks[7].get("attempts", 0) + 1
-            self.cooldown_end_time = time.time() + cooldown
-            self.after(cooldown * 1000, self.unlock_book)
+            else:
+                self.code_window.destroy()
+                self.animate_bookshelf(None)
+                self.bookLocked = True
+                cooldown = 60 * (2 ** self.tasks[7].get("attempts", 0))
+                self.tasks[7]["attempts"] = self.tasks[7].get("attempts", 0) + 1
+                self.cooldown_end_time = time.time() + cooldown
+                self.after(cooldown * 1000, self.unlock_book)
 
     def unlock_book(self):
         self.bookLocked = False
@@ -570,6 +582,32 @@ class ThievesJourney(tk.Frame):
             self.update_score()
         else:
             messagebox.showerror("Error", "Incorrect answer. Try again.")
+
+    def on_final_note_click(self):
+        if hasattr(self, "finalNote_window") and self.finalNote_window is not None and self.finalNote_window.winfo_exists():
+            self.task_window.focus()
+            return
+
+        #print("Opening Trashcan!")
+        self.finalNote_window = tk.Toplevel(root)
+        self.finalNote_window.title("Note")
+        self.finalNote_window.geometry("400x400")
+        self.finalNote_window.resizable(False, False)
+
+        finalNote_canvas = tk.Canvas(self.finalNote_window, width=400, height=400, bg="gray")
+        finalNote_canvas.pack(fill=tk.BOTH, expand=True)
+
+        img_path = resource_path("Background.png")
+        img = Image.open(img_path).resize((400, 400))
+        self.tk_finalNote_img = ImageTk.PhotoImage(img)
+
+        finalNote_canvas.create_image(0, 0, anchor=tk.NW, image=self.tk_finalNote_img)
+        finalNote_canvas.create_text(30,140,anchor=tk.NW,fill="black",font="Times 15", text="dhvq dhnrevf rfg qhb gnohyngn fhcen")
+        finalNote_canvas.create_text(30,160,anchor=tk.NW,fill="black",font="Times 15", text="hov nyvv qvfprer purzvpnyf")
+        finalNote_canvas.create_text(30,180,anchor=tk.NW,fill="black",font="Times 15", text="yhpvqn pnrehyrn fho vatragv cerffvbar yhprg")
+        finalNote_canvas.create_text(30,200,anchor=tk.NW,fill="black",font="Times 15", text="rg va cnevrgr vairavev cbgrfg")
+        finalNote_canvas.create_text(30,220,anchor=tk.NW,fill="black",font="Times 15", text="gbyyr vzntvarz rg qn phfgbqv plcuevf")
+
     def picture_interact(self, event):
         self.code_window = tk.Toplevel(root)
         self.code_window.title("Flag")
