@@ -86,12 +86,14 @@ class TaskWindow(tk.Toplevel):
         self.tasks = tasks
         self.score = score
         self.create_widgets()
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def create_widgets(self):
         tk.Label(self, text="Task List", font=("Arial", 16), bg="gray").pack(pady=10)
         self.task_listbox = tk.Listbox(self, font=("Arial", 10))
         self.task_listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         self.update_tasks()
+
 
     def update_tasks(self):
         self.task_listbox.delete(0, tk.END)
@@ -101,3 +103,5 @@ class TaskWindow(tk.Toplevel):
                 status = "[✓]" if task["completed"] else "[ ]"
                 self.task_listbox.insert(tk.END, f"{status} {task['desc']}")
         self.task_listbox.insert(tk.END, f"Score: {self.master.score + 10946}")
+    def on_close(self):
+        pass
